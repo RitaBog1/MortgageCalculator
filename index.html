@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mortgage Calculator</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="popup-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .scrollable-table {
+            max-height: 400px;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <div id="calculator">
+        <h2>Mortgage Calculator</h2>
+
+        <div>
+            <label for="totalAmount">Total Amount ($)</label>
+            <input type="text" id="totalAmount" placeholder="Enter Total Amount" />
+        </div>
+
+        <div>
+            <label for="downPayment">Down Payment ($)</label>
+            <input type="text" id="downPayment" placeholder="Enter Down Payment" />
+        </div>
+
+        <div>
+            <label for="interestRate">Interest Rate (%)</label>
+            <input type="text" id="interestRate" placeholder="Enter Interest Rate" />
+        </div>
+
+        <div>
+            <label for="amortizationPeriod">Amortization Period (years)</label>
+            <input type="text" id="amortizationPeriod" placeholder="Enter Amortization Period" />
+        </div>
+
+        <button onclick="calculateMortgage()">Calculate</button>
+        <div id="result"></div>
+    </div>
+
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="popup-content">
+                
+                <div class="roll">
+                    <div class="column">Total Monthly Payment: <br>
+                        $<span id="totalMonthlyPayment"></span></div>
+                    <div class="column">Total of 360 Payments: 
+                        <span id="totalPayments"></span></div> <br>
+                    <div class="column">Payoff Date: <br>
+                        <span id="payoffDate"></span></div>
+                </div>
+
+                
+                <div id="paymentGraph" class="chart-container">
+                    <canvas id="paymentChart"></canvas>
+                </div>
+
+                <div class="scrollable-table">
+                    <table class="mortgage-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Principal</th>
+                                <th>Interest</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mortgageDetails">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById("myModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("myModal").style.display = "none";
+        }
+
+        function calculateMortgage() {
+        
+            const totalAmount = parseFloat(document.getElementById("totalAmount").value);
+            const downPayment = parseFloat(document.getElementById("downPayment").value);
+            const interestRate = parseFloat(document.getElementById("interestRate").value) / 100;
+            const amortizationPeriod = parseFloat(document.getElementById("amortizationPeriod").value);
+
+            const principal = totalAmount - downPayment;
+            const monthlyInterestRate = interestRate / 12.0;
+            const numberOfPayments = amortizationPeriod * 12;
+
+            const monthlyPayment = calculateMonthlyPayment(principal, monthlyInterestRate, numberOfPayments);
+
+            document.getElementById("totalMonthlyPayment").textContent = monthlyPayment.toFixed(2);
+            document.getElementById("totalPayments").textContent = numberOfPayments;
+            document.getElementById("payoffDate").textContent = calculatePayoffDate(numberOfPayments);
+
+            const mortgageDetails = document.getElementById("mortgageDetails");
+            mortgageDetails.innerHTML = ""; 
+
+            let principalBalance = principal;
+            let balance = principalBalance;
+
+            const principalData = [];
+            const interestData = [];
+            const balanceData = [];
+            const paymentLabels = [];
+
+            for (let i = 1; i <= numberOfPayments; i++) {
+                const monthlyInterest = balance * monthlyInterestRate;
+
+                const paymentYear = calculatePaymentYear(i);
+
+                balance -= (monthlyPayment - monthlyInterest);
+                principalBalance -= monthlyPayment - monthlyInterest;
+
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${paymentYear}</td><td>$${principalBalance.toFixed(2)}</td><td>$${monthlyInterest.toFixed(2)}</td><td>$${balance.toFixed(2)}</td>`;
+
+                mortgageDetails.appendChild(row);
+
+                paymentLabels.push(paymentYear);
+                principalData.push(principalBalance.toFixed(2));
+                interestData.push(monthlyInterest.toFixed(2));
+                balanceData.push(balance.toFixed(2));
+            }
+            displayPaymentChart(paymentLabels, principalData, interestData, balanceData);
+
+            openModal();
+        }
+
+        function calculateMonthlyPayment(principal, monthlyInterestRate, numberOfPayments) {
+            if (monthlyInterestRate === 0) {
+                return principal / numberOfPayments;
+            } else {
+                return (principal * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -numberOfPayments));
+            }
+        }
+
+        function calculatePayoffDate(numberOfPayments) {
+            const currentDate = new Date();
+            currentDate.setMonth(currentDate.getMonth() + numberOfPayments);
+            return currentDate.toLocaleString("en-us", { month: "short", year: "numeric" });
+        }
+
+        function calculatePaymentYear(paymentNumber) {
+            const startYear = new Date().getFullYear();
+            return startYear + Math.floor(paymentNumber / 12) * 3;
+        }
+        
+        function displayPaymentChart(labels, principalData, interestData, balanceData) {
+            const ctx = document.getElementById("paymentChart").getContext("2d");
+            const chartData = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Principal",
+                        data: principalData,
+                        borderColor: "rgba(144, 238, 144, 1)",
+                        fill: false,
+                    },
+                    {
+                        label: "Interest",
+                        data: interestData,
+                        borderColor: "rgba(255, 215, 0, 1)",
+                        fill: false,
+                    },
+                    {
+                        label: "Balance",
+                        data: balanceData,
+                        borderColor: "rgba(0, 0, 0, 1)",
+                        fill: false,
+                    },
+                ],
+            };
+
+            const chartConfig = {
+                type: "line",
+                data: chartData,
+                options: {
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 0,
+                                maxTicksLimit: 12,
+                            },
+                        },
+                        y: {
+                            ticks: {
+                                stepSize: 3,
+                            },
+                        },
+                    },
+                },
+            };
+
+            new Chart(ctx, chartConfig);
+        }
+    </script>
+</body>
+</html>

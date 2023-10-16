@@ -1,0 +1,77 @@
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #f4f4f4;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.popup-content {
+    text-align: center;
+}
+
+.roll {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+
+.column {
+    flex: 1;
+    text-align: center;
+}
+
+.chart-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.mortgage-table-container {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
+.mortgage-table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: center;
+}
+
+.mortgage-table th,
+.mortgage-table td {
+    border: 1px solid #dddddd;
+    padding: 8px;
+}
+
+.mortgage-table th {
+    background-color: #f2f2f2;
+}
